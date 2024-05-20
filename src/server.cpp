@@ -56,13 +56,13 @@ void processCommands()
 
             if (it != store.end())
             {
-                response = "OK " + it->second;
+                response = "OK " + it->second + "\n";
                 it->second = value;
             }
             else
             {
                 store[key] = value;
-                response = "OK";
+                response = "OK\n";
             }
             
         } 
@@ -75,11 +75,11 @@ void processCommands()
 
             if (it != store.end()) 
             {
-                response = "OK " + it->second;
+                response = "OK " + it->second + "\n";
             } 
             else 
             {
-                response = "NE";
+                response = "NE\n";
             }
         } 
         else if (cmd == "DEL") 
@@ -91,25 +91,26 @@ void processCommands()
             
             if (it != store.end())
             {
-                response = "OK " + it->second;
+                response = "OK " + it->second + "\n";
                 store.erase(it);
             } 
             else 
             {
-                response = "NE";
+                response = "NE\n";
             }
         } 
         else if (cmd == "COUNT") 
         {
             std::lock_guard<std::mutex> storeLock(store_mutex);
-            response = "OK " + std::to_string(store.size());
+            response = "OK " + std::to_string(store.size()) + "\n";
         } 
         else 
         {
             response = "ERR Unknown command";
         }
 
-        std::cout << "Processed command: " << command << " - " << response << std::endl;
+        std::cout << command << std::endl;
+        std::cout << response << std::endl;
     }
 }
 
@@ -134,7 +135,7 @@ void handleClient(int clientSocket)
         }
         
         std::string command(buffer);
-        std::cout << "Received: " << command << std::endl;
+        //std::cout << command << std::endl;
 
         std::lock_guard<std::mutex> lock(queue_mutex);
         commandQueue.push({clientSocket, command});

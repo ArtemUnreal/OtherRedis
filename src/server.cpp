@@ -135,7 +135,6 @@ void handleClient(int clientSocket)
         }
         
         std::string command(buffer);
-        //std::cout << command << std::endl;
 
         std::lock_guard<std::mutex> lock(queue_mutex);
         commandQueue.push({clientSocket, command});
@@ -191,7 +190,8 @@ void startServer(int port)
             if (running) 
             {
                 handleError("Error on accept");
-            } else 
+            } 
+            else 
             {
                 break;
             }
@@ -216,7 +216,7 @@ void stopServer(int signal)
     exit(0);
 }
 
-int main(int argc, char *argv[]) 
+ int main(int argc, char *argv[]) 
 {
     if (argc < 2) 
     {
@@ -226,9 +226,9 @@ int main(int argc, char *argv[])
 
     int port = std::stoi(argv[1]);
 
-    std::signal(SIGINT, stopServer); // Ctrl+C
+    std::signal(SIGINT, stopServer); 
 
     startServer(port);
     
     return 0;
-}
+} 

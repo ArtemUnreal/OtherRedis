@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE ON) # CMAKE_VERBOSE_MAKEFILE — это переменная в CMake, 
 # которая позволяет включить подробный вывод при сборке проекта с помощью Makefile
 
-include(FetchContent)
+include(FetchContent)  # позволяет скачать библиотеки, если нет таковых
 
 FetchContent_Declare(
   googletest
@@ -18,7 +18,7 @@ set(SERVER_SOURCES src/server.cpp)
 set(CLIENT_SOURCES src/client.cpp)
 set(TEST_SOURCES tests/test.cpp)
 
-set(HEADERS src/common.h)
+set(HEADERS src/common.h src/server.h)
 
 add_executable(server ${SERVER_SOURCES} ${HEADERS})
 add_executable(client ${CLIENT_SOURCES} ${HEADERS})
@@ -28,6 +28,7 @@ target_link_libraries(client pthread)
 
 enable_testing()
 add_executable(runTests ${TEST_SOURCES})
+target_compile_definitions(runTests PRIVATE TEST_BUILD)
 target_link_libraries(runTests gtest gtest_main pthread)
 
 include_directories(src)

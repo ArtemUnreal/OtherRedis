@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "common.h"
+#include "server.h"
 
 std::unordered_map<std::string, std::string> store;
 std::mutex store_mutex;
@@ -216,7 +217,8 @@ void stopServer(int signal)
     exit(0);
 }
 
- int main(int argc, char *argv[]) 
+#ifndef TEST_BUILD
+int main(int argc, char *argv[]) 
 {
     if (argc < 2) 
     {
@@ -232,3 +234,4 @@ void stopServer(int signal)
     
     return 0;
 } 
+#endif

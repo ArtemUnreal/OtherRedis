@@ -82,12 +82,14 @@ std::string funcForTestServer(const std::string& command)
 
 TEST(ServerTest, PutCmd)
 {
+    store.clear();
     EXPECT_EQ(funcForTestServer("PUT name Vasya"), "OK\n");
     EXPECT_EQ(funcForTestServer("PUT name Masha"), "OK Vasya\n");
 }
 
 TEST(ServerTes, GetCmd)
 {
+    store.clear();
     funcForTestServer("PUT name Masha");
     EXPECT_EQ(funcForTestServer("GET name"), "OK Masha\n");
     EXPECT_EQ(funcForTestServer("GET age"), "NE\n");
@@ -95,6 +97,7 @@ TEST(ServerTes, GetCmd)
 
 TEST(ServerTest, DelCmd)
 {
+    store.clear();
     funcForTestServer("PUT age 20");
     EXPECT_EQ(funcForTestServer("DEL age"), "OK 20\n");
     EXPECT_EQ(funcForTestServer("DEL name"), "NE\n");
@@ -102,6 +105,7 @@ TEST(ServerTest, DelCmd)
 
 TEST(ServerTest, CountCmd)
 {
+    store.clear();
     funcForTestServer("PUT name Masha");
     funcForTestServer("PUT age 20");
     EXPECT_EQ(funcForTestServer("COUNT"), "OK 2\n");

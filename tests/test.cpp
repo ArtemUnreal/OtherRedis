@@ -1,7 +1,12 @@
 #include <gtest/gtest.h>
 #include <unordered_map>
 #include <string>
-#include "../src/server.cpp"
+#include <sstream>
+
+#include "../src/server.h"
+
+std::unordered_map<std::string, std::string> store;
+std::mutex store_mutex;
 
 std::string funcForTestServer(const std::string& command) 
 {
@@ -9,15 +14,16 @@ std::string funcForTestServer(const std::string& command)
 
     std::istringstream iss(command);
     std::string cmd;
-    iss >> cmd;
-
     std::string key;
     std::string value;
+
+    iss >> cmd >> key >> value;
+
     std::string response;
 
     if (cmd == "PUT") 
     {
-        iss >> key >> value;
+        //iss >> key >> value;
             
         std::lock_guard<std::mutex> storeLock(store_mutex);
         auto it = store.find(key);
@@ -36,7 +42,7 @@ std::string funcForTestServer(const std::string& command)
     } 
     else if (cmd == "GET") 
     {
-        iss >> key;
+        //iss >> key;
 
         std::lock_guard<std::mutex> storeLock(store_mutex);
         auto it = store.find(key);
@@ -52,7 +58,7 @@ std::string funcForTestServer(const std::string& command)
     } 
     else if (cmd == "DEL") 
     {
-        iss >> key;
+        //iss >> key;
             
         std::lock_guard<std::mutex> storeLock(store_mutex);
         auto it = store.find(key);
@@ -83,13 +89,15 @@ std::string funcForTestServer(const std::string& command)
 TEST(ServerTest, PutCmd)
 {
     store.clear();
+
     EXPECT_EQ(funcForTestServer("PUT name Vasya"), "OK\n");
     EXPECT_EQ(funcForTestServer("PUT name Masha"), "OK Vasya\n");
 }
 
-TEST(ServerTes, GetCmd)
+TEST(ServerTest, GetCmd)
 {
     store.clear();
+
     funcForTestServer("PUT name Masha");
     EXPECT_EQ(funcForTestServer("GET name"), "OK Masha\n");
     EXPECT_EQ(funcForTestServer("GET age"), "NE\n");
@@ -98,6 +106,7 @@ TEST(ServerTes, GetCmd)
 TEST(ServerTest, DelCmd)
 {
     store.clear();
+
     funcForTestServer("PUT age 20");
     EXPECT_EQ(funcForTestServer("DEL age"), "OK 20\n");
     EXPECT_EQ(funcForTestServer("DEL name"), "NE\n");
@@ -106,6 +115,7 @@ TEST(ServerTest, DelCmd)
 TEST(ServerTest, CountCmd)
 {
     store.clear();
+
     funcForTestServer("PUT name Masha");
     funcForTestServer("PUT age 20");
     EXPECT_EQ(funcForTestServer("COUNT"), "OK 2\n");
@@ -120,4 +130,3 @@ int main(int argc, char* argv[])
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-

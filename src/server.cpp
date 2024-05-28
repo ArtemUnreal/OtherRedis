@@ -1,151 +1,22 @@
 #include <iostream>
-#include <thread>
-#include <unordered_map>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
-#include <mutex>
-#include <queue>
-#include <condition_variable>
-#include <atomic>
 #include <csignal>
 #include <sstream>
 
 #include "common.h"
 #include "server.h"
 
-std::unordered_map<std::string, std::string> store;
-std::mutex store_mutex;
+Server* Server::inst = NULL;
 
-std::queue<std::pair<int, std::string>> commandQueue;
-std::mutex queue_mutex;
-
-std::condition_variable queue_cq;
-
-std::atomic<bool> running(true);
-
-void processCommands() 
+Server::Server(int port) : port(port), running(true)
 {
-    while (running) 
-    {
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        queue_cq.wait(lock, [] { return !commandQueue.empty() || !running; });
-
-        if (!running && commandQueue.empty()) break;
-
-        auto clientCommand = commandQueue.front();
-        commandQueue.pop();
-        lock.unlock();
-
-        int clientSocket = clientCommand.first;
-        std::string command = clientCommand.second;
-
-        std::istringstream iss(command);
-        std::string cmd;
-        iss >> cmd;
-
-        std::string key;
-        std::string value;
-        std::string response;
-
-        if (cmd == "PUT") 
-        {
-            iss >> key >> value;
-            
-            std::lock_guard<std::mutex> storeLock(store_mutex);
-            auto it = store.find(key);
-
-            if (it != store.end())
-            {
-                response = "OK " + it->second + "\n";
-                it->second = value;
-            }
-            else
-            {
-                store[key] = value;
-                response = "OK\n";
-            }
-            
-        } 
-        else if (cmd == "GET") 
-        {
-            iss >> key;
-
-            std::lock_guard<std::mutex> storeLock(store_mutex);
-            auto it = store.find(key);
-
-            if (it != store.end()) 
-            {
-                response = "OK " + it->second + "\n";
-            } 
-            else 
-            {
-                response = "NE\n";
-            }
-        } 
-        else if (cmd == "DEL") 
-        {
-            iss >> key;
-            
-            std::lock_guard<std::mutex> storeLock(store_mutex);
-            auto it = store.find(key);
-            
-            if (it != store.end())
-            {
-                response = "OK " + it->second + "\n";
-                store.erase(it);
-            } 
-            else 
-            {
-                response = "NE\n";
-            }
-        } 
-        else if (cmd == "COUNT") 
-        {
-            std::lock_guard<std::mutex> storeLock(store_mutex);
-            response = "OK " + std::to_string(store.size()) + "\n";
-        } 
-        else 
-        {
-            response = "ERR Unknown command";
-        }
-
-        std::cout << command << std::endl;
-        std::cout << response << std::endl;
-    }
+    inst = this;
 }
 
-void handleClient(int clientSocket) 
+void Server::startServer() 
 {
-    char buffer[BUFFER_SIZE];
-
-    while (running) 
-    {
-        memset(buffer, 0, BUFFER_SIZE);
-        int bytesReceived = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
-        
-        if (bytesReceived < 0) 
-        {
-            handleError("Error reading from socket");
-        } 
-        else if (bytesReceived == 0) 
-        {
-            std::cout << "Client disconnected" << std::endl;
-            close(clientSocket);
-            break;
-        }
-        
-        std::string command(buffer);
-
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        commandQueue.push({clientSocket, command});
-        queue_cq.notify_one();
-    }
-}
-
-void startServer(int port) 
-{
-    int serverSocket;
     struct sockaddr_in serverAddr;
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -176,8 +47,7 @@ void startServer(int port)
 
     std::cout << "Server listening on port " << port << std::endl;
 
-    std::thread processorThread(processCommands);
-    processorThread.detach();
+    processorThread = std::thread(&Server::processCommands, this);
 
     while (running) 
     {
@@ -200,38 +70,164 @@ void startServer(int port)
 
         std::cout << "Client connected" << std::endl;
 
-        std::thread clientThread(handleClient, clientSocket);
+        std::thread clientThread(&Server::handleClient, this, clientSocket);
         clientThread.detach();
     }
 
     close(serverSocket);
-    std::cout << "Server stopped" << std::endl;
+    //std::cout << "Server stopped" << std::endl;
 }
 
-void stopServer(int signal) 
+void Server::stopServer() 
 {
     std::cout << "Stopping server..." << std::endl;
     running = false;
     queue_cq.notify_all();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    exit(0);
+
+    if (processorThread.joinable())
+    {
+        processorThread.join();
+    }   
+
+    close(serverSocket);
+
+    std::cout << "Server stopped" << std::endl;
 }
 
-#ifndef TEST_BUILD
-int main(int argc, char *argv[]) 
+void Server::processCommands() 
 {
-    if (argc < 2) 
+    while (running) 
     {
-        std::cerr << "Usage: " << argv[0] << " <port>" << std::endl;
-        return 1;
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        
+        queue_cq.wait(lock, [this] { return !commandQueue.empty() || !running; });
+
+        if (!running && commandQueue.empty())
+        {
+            break;
+        }
+
+        auto clientCommand = commandQueue.front();
+        commandQueue.pop();
+
+        lock.unlock();
+
+        int clientSocket = clientCommand.first;
+        std::string command = clientCommand.second;
+
+        std::istringstream iss(command);
+        std::string cmd;
+        std::string key;
+        std::string value;
+
+        iss >> cmd >> key >> value;
+
+        std::string response;
+
+        if (cmd == "PUT") 
+        {
+            //iss >> key >> value;
+            
+            std::lock_guard<std::mutex> storeLock(store_mutex);
+            auto it = store.find(key);
+
+            if (it != store.end())
+            {
+                response = "OK " + it->second + "\n";
+                it->second = value;
+            }
+            else
+            {
+                store[key] = value;
+                response = "OK\n";
+            }
+            
+        } 
+        else if (cmd == "GET") 
+        {
+            //iss >> key;
+
+            std::lock_guard<std::mutex> storeLock(store_mutex);
+            auto it = store.find(key);
+
+            if (it != store.end()) 
+            {
+                response = "OK " + it->second + "\n";
+            } 
+            else 
+            {
+                response = "NE\n";
+            }
+        } 
+        else if (cmd == "DEL") 
+        {
+            //iss >> key;
+            
+            std::lock_guard<std::mutex> storeLock(store_mutex);
+            auto it = store.find(key);
+            
+            if (it != store.end())
+            {
+                response = "OK " + it->second + "\n";
+                store.erase(it);
+            } 
+            else 
+            {
+                response = "NE\n";
+            }
+        } 
+        else if (cmd == "COUNT") 
+        {
+            std::lock_guard<std::mutex> storeLock(store_mutex);
+            response = "OK " + std::to_string(store.size()) + "\n";
+        } 
+        else 
+        {
+            response = "ERR Unknown command";
+        }
+
+        std::cout << command << std::endl;
+        std::cout << response << std::endl;
     }
+}
 
-    int port = std::stoi(argv[1]);
+void Server::handleClient(int clientSocket) 
+{
+    char buffer[BUFFER_SIZE];
 
-    std::signal(SIGINT, stopServer); 
+    while (running) 
+    {
+        memset(buffer, 0, BUFFER_SIZE);
+        int bytesReceived = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
+        
+        if (bytesReceived < 0) 
+        {
+            handleError("Error reading from socket");
+        } 
+        else if (bytesReceived == 0) 
+        {
+            std::cout << "Client disconnected" << std::endl;
+            close(clientSocket);
+            break;
+        }
+        
+        std::string command(buffer);
 
-    startServer(port);
-    
-    return 0;
-} 
-#endif
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        commandQueue.push({clientSocket, command});
+        queue_cq.notify_one();
+    }
+}
+
+void Server::signalHandler(int signal)
+{
+    if (signal == SIGINT && inst != NULL)
+    {
+        inst->stopServer();
+    }
+}
+
+void Server::registerSignal()
+{
+    std::signal(SIGINT, Server::signalHandler);
+}

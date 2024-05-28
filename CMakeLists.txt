@@ -14,7 +14,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-set(SERVER_SOURCES src/server.cpp)
+set(SERVER_SOURCES src/server.cpp src/main.cpp)
 set(CLIENT_SOURCES src/client.cpp)
 set(TEST_SOURCES tests/test.cpp)
 
@@ -27,7 +27,9 @@ target_link_libraries(server pthread)
 target_link_libraries(client pthread)
 
 enable_testing()
+
 add_executable(runTests ${TEST_SOURCES})
+target_include_directories(runTests PRIVATE src)
 target_compile_definitions(runTests PRIVATE TEST_BUILD)
 target_link_libraries(runTests gtest gtest_main pthread)
 

@@ -1,0 +1,15 @@
+[2024-05-29 19:59:53.929] [basic_logger] [info] Server instance created on port 8080
+[2024-05-29 20:58:44.554] [basic_logger] [info] Server instance created on port 8080
+[2024-05-29 20:58:44.554] [basic_logger] [info] Socket created successfully
+[2024-05-29 20:58:44.554] [basic_logger] [info] Socket bound successfully
+[2024-05-29 20:58:44.554] [basic_logger] [info] Server listening on port 8080
+[2024-05-29 20:59:10.225] [basic_logger] [info] Client connected
+[2024-05-29 20:59:16.414] [basic_logger] [debug] Added key name: Masha
+[2024-05-29 20:59:20.170] [basic_logger] [debug] Counted keys: 1
+[2024-05-29 20:59:27.979] [basic_logger] [debug] Added key age: 21
+[2024-05-29 20:59:30.267] [basic_logger] [debug] Counted keys: 2
+[2024-05-29 20:59:37.977] [basic_logger] [debug] Get key age: 21
+[2024-05-29 21:00:01.981] [basic_logger] [debug] Added key name: Masha
+[2024-05-29 21:00:05.420] [basic_logger] [debug] Counted keys: 2
+[2024-05-29 21:00:07.707] [basic_logger] [info] Client disconnected
+[2024-05-29 21:00:08.685] [basic_logger] [info] Server stopped

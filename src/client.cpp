@@ -13,6 +13,7 @@ void stopClient(int signal)
 {
     std::cout << "Stopping client..." << std::endl;
     close(clientSocket);
+    std::cout << "Client Stopped" << std::endl;
     exit(0);
 }
 

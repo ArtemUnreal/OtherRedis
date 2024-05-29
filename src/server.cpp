@@ -13,6 +13,10 @@ Server* Server::inst = NULL;
 Server::Server(int port) : port(port), running(true)
 {
     inst = this;
+
+    log = spdlog::basic_logger_mt("basic_logger", "../logs/server");
+    spdlog::set_level(spdlog::level::debug);
+    log->info("Server instance created on port {}", port);
 }
 
 void Server::startServer() 
@@ -23,9 +27,11 @@ void Server::startServer()
     
     if (serverSocket < 0) 
     {
+        log->critical("Error opening socket");
         handleError("Error opening socket");
     }
 
+    log->info("Socket created successfully");
     std::cout << "Socket created successfully" << std::endl;
 
     memset(&serverAddr, 0, sizeof(serverAddr));
@@ -35,16 +41,19 @@ void Server::startServer()
 
     if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) 
     {
+        log->critical("Error on binding");
         handleError("Error on binding");
     }
 
-    std::cout << "Socket bound successfully" << std::endl;
+    log->info("Socket bound successfully");
 
     if (listen(serverSocket, 5) < 0) 
     {
+        log->critical("Error on listening");
         handleError("Error on listening");
     }
 
+    log->info("Server listening on port {}", port);
     std::cout << "Server listening on port " << port << std::endl;
 
     processorThread = std::thread(&Server::processCommands, this);
@@ -60,6 +69,7 @@ void Server::startServer()
         {
             if (running) 
             {
+                log->error("Error on accept");
                 handleError("Error on accept");
             } 
             else 
@@ -68,6 +78,7 @@ void Server::startServer()
             }
         }
 
+        log->info("Client connected");
         std::cout << "Client connected" << std::endl;
 
         std::thread clientThread(&Server::handleClient, this, clientSocket);
@@ -91,6 +102,7 @@ void Server::stopServer()
 
     close(serverSocket);
 
+    log->info("Server stopped");
     std::cout << "Server stopped" << std::endl;
 }
 
@@ -135,11 +147,13 @@ void Server::processCommands()
             {
                 response = "OK " + it->second + "\n";
                 it->second = value;
+                log->debug("Added key {}: {}", key, value);
             }
             else
             {
                 store[key] = value;
                 response = "OK\n";
+                log->debug("Added key {}: {}", key, value);
             }
             
         } 
@@ -153,10 +167,12 @@ void Server::processCommands()
             if (it != store.end()) 
             {
                 response = "OK " + it->second + "\n";
+                log->debug("Get key {}: {}", key, it->second);
             } 
             else 
             {
                 response = "NE\n";
+                log->warn("Key {} not found", key);
             }
         } 
         else if (cmd == "DEL") 
@@ -170,20 +186,24 @@ void Server::processCommands()
             {
                 response = "OK " + it->second + "\n";
                 store.erase(it);
+                log->debug("Deleted key {}: {}", key, it->second);
             } 
             else 
             {
                 response = "NE\n";
+                log->warn("Key {} not found", key);
             }
         } 
         else if (cmd == "COUNT") 
         {
             std::lock_guard<std::mutex> storeLock(store_mutex);
             response = "OK " + std::to_string(store.size()) + "\n";
+            log->debug("Counted keys: {}", store.size());
         } 
         else 
         {
             response = "ERR Unknown command";
+            log->error("Uknown command: {}", cmd);
         }
 
         std::cout << command << std::endl;
@@ -202,11 +222,14 @@ void Server::handleClient(int clientSocket)
         
         if (bytesReceived < 0) 
         {
+            log->error("Error reading from socket");
             handleError("Error reading from socket");
         } 
         else if (bytesReceived == 0) 
         {
+            log->info("Client disconnected");
             std::cout << "Client disconnected" << std::endl;
+            
             close(clientSocket);
             break;
         }

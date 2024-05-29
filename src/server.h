@@ -7,6 +7,8 @@
 #include <queue>
 #include <condition_variable>
 #include <atomic>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 class Server 
 {
@@ -36,4 +38,6 @@ private:
     std::thread processorThread;
 
     static Server* inst;
+
+    std::shared_ptr<spdlog::logger> log;
 };

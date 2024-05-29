@@ -202,12 +202,12 @@ void Server::processCommands()
         } 
         else 
         {
-            //response = "ERR Unknown command";
+            response = "ERR\n";
             log->error("Uknown command: {}", cmd);
         }
 
-        std::cout << command << std::endl;
-        std::cout << response << std::endl;
+        //std::cout << command << std::endl;
+        std::cout << response;
     }
 }
 

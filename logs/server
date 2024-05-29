@@ -13,3 +13,14 @@
 [2024-05-29 21:00:05.420] [basic_logger] [debug] Counted keys: 2
 [2024-05-29 21:00:07.707] [basic_logger] [info] Client disconnected
 [2024-05-29 21:00:08.685] [basic_logger] [info] Server stopped
+[2024-05-29 22:51:38.404] [basic_logger] [info] Server instance created on port 8080
+[2024-05-29 22:51:38.404] [basic_logger] [info] Socket created successfully
+[2024-05-29 22:51:38.404] [basic_logger] [info] Socket bound successfully
+[2024-05-29 22:51:38.404] [basic_logger] [info] Server listening on port 8080
+[2024-05-29 22:51:55.388] [basic_logger] [info] Client connected
+[2024-05-29 22:52:01.502] [basic_logger] [error] Uknown command: Hello
+[2024-05-29 22:52:18.724] [basic_logger] [debug] Added key name: v
+[2024-05-29 22:52:23.501] [basic_logger] [error] Uknown command: Get
+[2024-05-29 22:52:24.971] [basic_logger] [warning] Key  not found
+[2024-05-29 22:52:38.954] [basic_logger] [info] Client disconnected
+[2024-05-29 22:52:41.349] [basic_logger] [info] Server stopped

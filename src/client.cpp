@@ -11,9 +11,9 @@ int clientSocket;
 
 void stopClient(int signal) 
 {
-    std::cout << "Stopping client..." << std::endl;
+    //std::cout << "Stopping client..." << std::endl;
     close(clientSocket);
-    std::cout << "Client Stopped" << std::endl;
+    //std::cout << "Client Stopped" << std::endl;
     exit(0);
 }
 
@@ -28,22 +28,22 @@ void startClient(const std::string &hostname, int port)
         handleError("Error opening socket");
     }
 
-    std::cout << "Socket created successfully" << std::endl;
+    //std::cout << "Socket created successfully" << std::endl;
 
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     inet_pton(AF_INET, hostname.c_str(), &serverAddr.sin_addr);
     serverAddr.sin_port = htons(port);
 
-    std::cout << "Connecting to server..." << std::endl;
+    //std::cout << "Connecting to server..." << std::endl;
 
     while (connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) 
     {
-        std::cerr << "Error connecting, retrying..." << std::endl;
+        //std::cerr << "Error connecting, retrying..." << std::endl;
         sleep(1);
     }
 
-    std::cout << "Connected to server" << std::endl;
+    //std::cout << "Connected to server" << std::endl;
 
     while (true) 
     {
@@ -64,7 +64,7 @@ void startClient(const std::string &hostname, int port)
         } 
         else 
         {
-            std::cout << "Sent " << bytesSent << " bytes" << std::endl;
+            //std::cout << "Sent " << bytesSent << " bytes" << std::endl;
         }
     }
 

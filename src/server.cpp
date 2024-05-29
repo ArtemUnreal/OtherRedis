@@ -28,11 +28,11 @@ void Server::startServer()
     if (serverSocket < 0) 
     {
         log->critical("Error opening socket");
-        handleError("Error opening socket");
+        //handleError("Error opening socket");
     }
 
     log->info("Socket created successfully");
-    std::cout << "Socket created successfully" << std::endl;
+    //std::cout << "Socket created successfully" << std::endl;
 
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
@@ -42,7 +42,7 @@ void Server::startServer()
     if (bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) 
     {
         log->critical("Error on binding");
-        handleError("Error on binding");
+        //handleError("Error on binding");
     }
 
     log->info("Socket bound successfully");
@@ -50,11 +50,11 @@ void Server::startServer()
     if (listen(serverSocket, 5) < 0) 
     {
         log->critical("Error on listening");
-        handleError("Error on listening");
+        //handleError("Error on listening");
     }
 
     log->info("Server listening on port {}", port);
-    std::cout << "Server listening on port " << port << std::endl;
+    //std::cout << "Server listening on port " << port << std::endl;
 
     processorThread = std::thread(&Server::processCommands, this);
 
@@ -70,7 +70,7 @@ void Server::startServer()
             if (running) 
             {
                 log->error("Error on accept");
-                handleError("Error on accept");
+                //handleError("Error on accept");
             } 
             else 
             {
@@ -79,7 +79,7 @@ void Server::startServer()
         }
 
         log->info("Client connected");
-        std::cout << "Client connected" << std::endl;
+        //std::cout << "Client connected" << std::endl;
 
         std::thread clientThread(&Server::handleClient, this, clientSocket);
         clientThread.detach();
@@ -91,7 +91,7 @@ void Server::startServer()
 
 void Server::stopServer() 
 {
-    std::cout << "Stopping server..." << std::endl;
+    //std::cout << "Stopping server..." << std::endl;
     running = false;
     queue_cq.notify_all();
 
@@ -103,7 +103,7 @@ void Server::stopServer()
     close(serverSocket);
 
     log->info("Server stopped");
-    std::cout << "Server stopped" << std::endl;
+    //std::cout << "Server stopped" << std::endl;
 }
 
 void Server::processCommands() 
@@ -202,7 +202,7 @@ void Server::processCommands()
         } 
         else 
         {
-            response = "ERR Unknown command";
+            //response = "ERR Unknown command";
             log->error("Uknown command: {}", cmd);
         }
 
@@ -223,13 +223,12 @@ void Server::handleClient(int clientSocket)
         if (bytesReceived < 0) 
         {
             log->error("Error reading from socket");
-            handleError("Error reading from socket");
+            //handleError("Error reading from socket");
         } 
         else if (bytesReceived == 0) 
         {
             log->info("Client disconnected");
-            std::cout << "Client disconnected" << std::endl;
-            
+            //std::cout << "Client disconnected" << std::endl;
             close(clientSocket);
             break;
         }

@@ -10,7 +10,7 @@
 
 Server* Server::inst = NULL;
 
-Server::Server(int port) : port(port), running(true)
+Server::Server(int port, int maxConnect) : port(port), maxConnect(maxConnect), currentConnect(0), running(true)
 {
     inst = this;
 
@@ -65,7 +65,15 @@ void Server::startServer()
 
         int clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &clientLen);
 
-        if (clientSocket < 0) 
+        std::lock_guard<std::mutex> lock(connections_mutex);
+        if (currentConnect >= maxConnect)
+        {
+            log->warn("Max connections limit reached.");
+            close(clientSocket);
+            continue;
+        }
+
+        /*if (clientSocket < 0) 
         {
             if (running) 
             {
@@ -76,9 +84,11 @@ void Server::startServer()
             {
                 break;
             }
-        }
+        }*/     
 
-        log->info("Client connected");
+        currentConnect++;
+
+        log->info("Client connected, current connections: {}", currentConnect);
         //std::cout << "Client connected" << std::endl;
 
         std::thread clientThread(&Server::handleClient, this, clientSocket);
@@ -239,6 +249,11 @@ void Server::handleClient(int clientSocket)
         commandQueue.push({clientSocket, command});
         queue_cq.notify_one();
     }
+
+    std::lock_guard<std::mutex> lock(connections_mutex);
+    currentConnect--;
+    
+    log->info("Client disconnect, current connections: {}", currentConnect);
 }
 
 void Server::signalHandler(int signal)

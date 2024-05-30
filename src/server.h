@@ -13,7 +13,7 @@
 class Server 
 {
 public:
-    Server(int port);
+    Server(int port, int maxConnect);
     void startServer();
     void stopServer();
 
@@ -25,6 +25,10 @@ private:
 
     int port;
     int serverSocket;
+    int maxConnect;
+
+    std::atomic<int> currentConnect;
+    std::mutex connections_mutex;
 
     std::unordered_map<std::string, std::string> store;
     std::mutex store_mutex;

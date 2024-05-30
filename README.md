@@ -14,11 +14,11 @@ make
 ./runTests
 
 Можем запустить наш сервер
-./server <port> <maxConnection>
+./server port maxConnection
 ./server 8080 5 
 
 Можем запустить клиента
-./client <hostname> <port>
+./client hostname port
 ./client localhost 8080
 
 Чтобы завершить работу сервера или клиента нужно нажать сочетание клавиш Ctrl + C
